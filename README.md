@@ -4,16 +4,12 @@ This is the project for JAVA Programming Assignment in KNU
 
 How to Run
 
-git clone ~repository
+clone the repository
 
-terminal
-
-
-  cd ~git repository
+cd api-demo
   
-  cd api-demo
-  
-  ./gradlew bootRun
-  
+./gradlew bootRun
 
-Use curl command to localhost port 8080
+localhost port 8080
+  
+to stop gradle daemon : ./gradlew --stop
