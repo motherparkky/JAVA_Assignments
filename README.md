@@ -8,7 +8,10 @@ git clone ~repository
 
 terminal
   cd ~git repository
+  
   cd api-demo
+  
   ./gradlew bootRun
+  
 
 Use curl command to localhost port 8080
