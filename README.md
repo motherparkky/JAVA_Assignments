@@ -2,7 +2,7 @@
 This is the project for JAVA Programming Assignment in KNU
 
 
-How to Run
+# How to Run
 
 clone the repository
 
