@@ -34,14 +34,42 @@ public class RegularPolygon extends Shape {
     // TODO: 학생 과제 - 정다각형의 겹침 감지 알고리즘 구현
     @Override
     public boolean overlaps(Shape other) {
-        // 임시 구현: 랜덤하게 true/false 반환
-        return Math.random() < 0.3;
+        return checkSATOverlap(this.getVertices(), other.getVertices());
+    }
 
-        // 힌트:
-        // 1. SAT(Separating Axis Theorem) 알고리즘 사용 권장
-        // 2. 각 다각형의 모든 변에 대한 법선벡터를 계산
-        // 3. 각 법선에 두 도형을 투영하여 겹치는지 확인
-        // 4. 모든 법선에서 겹치면 두 도형이 겹침
+    private boolean checkSATOverlap(List<Point> vertsA, List<Point> vertsB) {
+        List<Point> allEdges = new ArrayList<>(vertsA);
+        allEdges.addAll(vertsB);
+
+        for (int i = 0; i < allEdges.size(); i++) {
+            Point p1 = allEdges.get(i);
+            Point p2 = allEdges.get((i + 1) % allEdges.size());
+            double dx = p2.getX() - p1.getX();
+            double dy = p2.getY() - p1.getY();
+
+            // 법선 벡터
+            double nx = -dy;
+            double ny = dx;
+
+            double minA = Double.POSITIVE_INFINITY;
+            double maxA = Double.NEGATIVE_INFINITY;
+            for (Point p : vertsA) {
+                double proj = p.getX() * nx + p.getY() * ny;
+                minA = Math.min(minA, proj);
+                maxA = Math.max(maxA, proj);
+            }
+
+            double minB = Double.POSITIVE_INFINITY;
+            double maxB = Double.NEGATIVE_INFINITY;
+            for (Point p : vertsB) {
+                double proj = p.getX() * nx + p.getY() * ny;
+                minB = Math.min(minB, proj);
+                maxB = Math.max(maxB, proj);
+            }
+
+            if (maxA < minB || maxB < minA) return false;
+        }
+        return true;
     }
 
     @Override

@@ -14,13 +14,19 @@ public class Circle extends Shape {
     // TODO: 학생 과제 - 원의 겹침 감지 알고리즘 구현
     @Override
     public boolean overlaps(Shape other) {
-        // 임시 구현: 랜덤하게 true/false 반환
-        return Math.random() < 0.3;
-
-        // 힌트:
-        // 1. 다른 도형이 원인 경우: 두 원의 중심 거리가 반지름의 합보다 작은지 확인
-        // 2. 다른 도형이 다각형인 경우: 다각형의 모든 정점이 원 안에 있는지 확인
-        // 3. 또는 다각형의 모든 변이 원과 교차하는지 확인
+        if (other instanceof Circle) {
+            double dx = this.center.getX() - other.center.getX();
+            double dy = this.center.getY() - other.center.getY();
+            double distance = Math.sqrt(dx * dx + dy * dy);
+            return distance < (this.radius + other.radius);
+        }
+        for (Point p : other.getVertices()) {
+            double dx = p.getX() - this.center.getX();
+            double dy = p.getY() - this.center.getY();
+            double distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance <= this.radius) return true;
+        }
+        return false;
     }
 
     @Override
