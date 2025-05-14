@@ -1,7 +1,5 @@
 class ShapeVisualizer {
     constructor() {
-        this.canvas = document.getElementById('shapeCanvas');
-        this.ctx = this.canvas.getContext('2d');
         this.jsonDataElement = document.getElementById('jsonData');
         this.statsElement = document.getElementById('stats');
         this.currentShapes = null;
@@ -10,7 +8,7 @@ class ShapeVisualizer {
         // 이벤트 리스너 설정
         document.getElementById('generateBtn').addEventListener('click', () => this.generateShapes());
         document.getElementById('showJsonBtn').addEventListener('click', () => this.showJsonModal());
-        window.addEventListener('resize', () => this.updateCanvasSize());
+        window.addEventListener('resize', () => this.updateSvgSize());
 
         // 모달 외부 클릭 시 닫기
         document.getElementById('jsonModal').addEventListener('click', (e) => {
@@ -26,24 +24,20 @@ class ShapeVisualizer {
             }
         });
 
-        // 초기 캔버스 크기 설정
-        this.updateCanvasSize();
+        // 초기 SVG 크기 설정
+        this.updateSvgSize();
     }
 
-    updateCanvasSize() {
+    updateSvgSize() {
         const container = document.getElementById('canvas-container');
-        const width = Math.max(800, window.innerWidth - 100);
-        const height = Math.max(500, window.innerHeight - 400);
-
-        this.canvas.width = width;
-        this.canvas.height = height;
-        this.canvas.style.width = width + 'px';
-        this.canvas.style.height = height + 'px';
-
-        // 캔버스 크기가 변경되면 기존 도형들을 다시 그림
-        if (this.currentShapes) {
-            this.drawShapes(this.currentShapes);
-        }
+        const rect = container.getBoundingClientRect();
+        const width = Math.floor(rect.width);
+        const height = Math.floor(rect.height);
+        const svg = document.getElementById('shapeSvg');
+        svg.setAttribute('width', width);
+        svg.setAttribute('height', height);
+        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        if (this.currentShapes) this.drawShapesSVG(this.currentShapes);
     }
 
     async generateShapes() {
@@ -54,22 +48,14 @@ class ShapeVisualizer {
         // API 요청 URL 생성
         const params = new URLSearchParams({
             Action: 'ShapesOverlaps',
-            Width: this.canvas.width,
-            Height: this.canvas.height,
+            Width: document.getElementById('shapeSvg').getAttribute('width'),
+            Height: document.getElementById('shapeSvg').getAttribute('height'),
             RadiusMax: radius,
             HowMany: count,
             MaxEdges: edges
         });
 
         try {
-            // 로딩 표시
-            this.ctx.fillStyle = '#f0f0f0';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            this.ctx.fillStyle = '#666';
-            this.ctx.font = '20px Arial';
-            this.ctx.textAlign = 'center';
-            this.ctx.fillText('생성 중...', this.canvas.width / 2, this.canvas.height / 2);
-
             // API 호출
             const response = await fetch(`/api?${params.toString()}`);
             const data = await response.json();
@@ -80,7 +66,7 @@ class ShapeVisualizer {
                 this.currentResponseData = data;
 
                 // 도형들 그리기
-                this.drawShapes(this.currentShapes);
+                this.drawShapesSVG(this.currentShapes);
 
                 // 통계 정보 업데이트
                 this.updateStats(this.currentShapes);
@@ -88,101 +74,39 @@ class ShapeVisualizer {
                 // JSON 데이터 저장
                 this.jsonDataElement.textContent = JSON.stringify(data, null, 2);
             } else {
-                this.showError('오류 발생: ' + data.RES.STATUS_MSG);
+                alert('오류 발생: ' + data.RES.STATUS_MSG);
                 console.error(data);
             }
         } catch (error) {
             console.error('API 호출 오류:', error);
-            this.showError('서버와 통신 중 오류가 발생했습니다.');
+            alert('서버와 통신 중 오류가 발생했습니다.');
         }
     }
 
-    showError(message) {
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.fillStyle = '#e74c3c';
-        this.ctx.font = '20px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText(message, this.canvas.width / 2, this.canvas.height / 2);
-    }
-
-    drawShapes(shapesData) {
-        // 캔버스 클리어
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        // 배경
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-        // 모든 도형 그리기
-        const shapes = shapesData.shapes;
-        for (const shape of shapes) {
-            this.drawShape(shape);
-        }
-
-        // 통계 정보 표시
-        this.drawStatistics(shapesData);
-    }
-
-    drawShape(shape) {
-        this.ctx.strokeStyle = '#2c3e50';
-        this.ctx.fillStyle = shape.color;
-        this.ctx.lineWidth = 2;
-
+    drawShapesSVG(shapesData) {
+      const svg = document.getElementById('shapeSvg');
+      // Clear existing shapes
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+      // Draw each shape
+      shapesData.shapes.forEach(shape => {
+        let el;
         if (shape.type === 'circle') {
-            this.drawCircle(shape);
-        } else if (shape.type === 'regularPolygon' || shape.type === 'irregularPolygon') {
-            this.drawPolygon(shape);
+          el = document.createElementNS(svg.namespaceURI, 'circle');
+          el.setAttribute('cx', shape.center.x);
+          el.setAttribute('cy', shape.center.y);
+          el.setAttribute('r', shape.radius);
+        } else {
+          el = document.createElementNS(svg.namespaceURI, 'polygon');
+          const points = shape.vertices.map(v => `${v.x},${v.y}`).join(' ');
+          el.setAttribute('points', points);
         }
-
-        // 도형 ID 표시 (작게)
-        this.ctx.fillStyle = '#000000';
-        this.ctx.font = '10px Arial';
-        this.ctx.textAlign = 'center';
-        const text = shape.id.substring(shape.id.lastIndexOf('_') + 1);
-        this.ctx.fillText(text, shape.center.x, shape.center.y);
-    }
-
-    drawCircle(circle) {
-        this.ctx.beginPath();
-        this.ctx.arc(circle.center.x, circle.center.y, circle.radius, 0, 2 * Math.PI);
-        this.ctx.fill();
-        this.ctx.stroke();
-    }
-
-    drawPolygon(polygon) {
-        const vertices = polygon.vertices;
-        if (vertices.length < 3) return;
-
-        this.ctx.beginPath();
-        this.ctx.moveTo(vertices[0].x, vertices[0].y);
-
-        for (let i = 1; i < vertices.length; i++) {
-            this.ctx.lineTo(vertices[i].x, vertices[i].y);
-        }
-
-        this.ctx.closePath();
-        this.ctx.fill();
-        this.ctx.stroke();
-    }
-
-    drawStatistics(shapesData) {
-        const { overlapGroups } = shapesData;
-
-        // 겹침 그룹 정보 표시
-        if (overlapGroups.length > 0) {
-            this.ctx.font = '12px Arial';
-            this.ctx.textAlign = 'left';
-            let y = 20;
-
-            overlapGroups.forEach((group, index) => {
-                this.ctx.fillStyle = group.color;
-                this.ctx.fillRect(10, y - 10, 15, 15);
-                this.ctx.fillStyle = '#000000';
-                this.ctx.fillText(`Group ${index + 1}: ${group.size} shapes`, 30, y);
-                y += 20;
-            });
-        }
+        el.setAttribute('fill', shape.color);
+        el.setAttribute('stroke', '#2c3e50');
+        el.setAttribute('stroke-width', 2);
+        svg.appendChild(el);
+      });
+      // Update stats panel (HTML)
+      this.updateStats(shapesData);
     }
 
     updateStats(shapesData) {
