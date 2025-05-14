@@ -2,193 +2,101 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Shape Overlaps Detection System</title>
     <style>
+        :root {
+          --bg: #F2F2F7;
+          --card-bg: rgba(255,255,255,0.8);
+          --primary: #007AFF;
+          --secondary: #8E8E93;
+          --text: #1C1C1E;
+          --subtext: #3C3C43;
+        }
+        * { box-sizing: border-box; margin:0; padding:0; }
         body {
-            margin: 0;
-            padding: 20px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f7fa;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          background-color: var(--bg);
+          padding: 20px;
+          color: var(--text);
         }
-
         .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          background: var(--card-bg);
+          backdrop-filter: blur(20px);
+          border-radius: 20px;
+          padding: 30px;
+          text-align: center;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+          margin-bottom: 20px;
         }
-
-        .header h1 {
-            color: #2c3e50;
-            margin: 0;
-        }
-
+        .header h1 { font-size: 2rem; font-weight: 600; }
         #controls {
-            margin-bottom: 20px;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
+          display: flex; flex-wrap: wrap; gap: 15px;
+          background: var(--card-bg); padding: 20px; border-radius: 15px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+          margin-bottom: 20px;
         }
-
-        .control-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .control-group label {
+          font-weight: 500; color: var(--subtext); min-width: 80px;
         }
-
-        #controls label {
-            min-width: 100px;
-            color: #34495e;
-            font-weight: 500;
+        .control-group input {
+          border: none; padding: 10px; border-radius: 10px;
+          background-color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+          width: 80px; font-size: 14px;
         }
-
-        #controls input {
-            width: 80px;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
+        button {
+          border: none; border-radius: 12px; padding: 12px 20px;
+          font-size: 16px; font-weight: 500;
+          transition: transform 0.2s ease; cursor: pointer;
         }
-
-        .btn {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-
-        .btn:hover {
-            background-color: #2980b9;
-        }
-
-        .btn.secondary {
-            background-color: #95a5a6;
-        }
-
-        .btn.secondary:hover {
-            background-color: #7f8c8d;
-        }
-
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-secondary { background: var(--secondary); color: #fff; }
+        button:hover { transform: translateY(-2px); }
         #canvas-container {
-            position: relative;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            overflow: hidden;
-            margin-bottom: 20px;
+          background: var(--card-bg); border-radius: 20px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+          overflow: hidden; position: relative;
+          width: 100%; height: 60vh;
+          margin-bottom: 40px;
         }
-
         #shapeCanvas {
-            display: block;
-            border: 1px solid #ddd;
+          width: 100%; height: 100%; display: block;
         }
-
         #info {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          background: var(--card-bg); padding: 20px; border-radius: 15px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.05);
         }
-
-        #info h3 {
-            margin-top: 0;
-            color: #2c3e50;
-        }
-
         .stats {
-            margin-top: 15px;
-            color: #7f8c8d;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
+          display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;
         }
-
         .stat-item {
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
+          background: #fff; padding: 12px; border-radius: 10px;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-
-        /* JSON 모달 스타일 */
         #jsonModal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
+          display: none; position: fixed; top: 0; left: 0;
+          width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+          backdrop-filter: blur(5px); z-index: 10000;
         }
-
         .modal-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            border-radius: 10px;
-            width: 80%;
-            max-width: 800px;
-            max-height: 80vh;
-            overflow: hidden;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+          position: absolute; top: 50%; left: 50%;
+          transform: translate(-50%, -50%); background: #fff;
+          border-radius: 15px; width: 80%; max-width: 800px;
+          max-height: 80vh; overflow: auto; padding: 20px;
+          box-shadow: 0 8px 30px rgba(0,0,0,0.1);
         }
-
         .modal-header {
-            padding: 20px;
-            background-color: #3498db;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+          display: flex; justify-content: space-between; align-items: center;
+          margin-bottom: 15px;
         }
-
-        .modal-header h3 {
-            margin: 0;
-        }
-
+        .modal-header h3 { font-size: 1.25rem; }
         .close-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+          background: none; border: none; font-size: 1.5rem; cursor: pointer;
         }
-
-        .modal-body {
-            padding: 20px;
-            overflow-y: auto;
-            max-height: calc(80vh - 60px);
-        }
-
         #jsonData {
-            white-space: pre-wrap;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
-            border: 1px solid #e9ecef;
-            margin: 0;
+          white-space: pre-wrap; font-family: monospace; font-size: 0.875rem;
+          background: #f8f9fa; padding: 15px; border-radius: 10px;
+          border: 1px solid #e1e1e1;
         }
     </style>
 </head>
@@ -199,22 +107,19 @@
 
 <div id="controls">
     <div class="control-group">
-        <label for="radius">Max Radius:</label>
+        <label for="radius">Max Radius</label>
         <input type="number" id="radius" value="50" min="10" max="100">
     </div>
-
     <div class="control-group">
-        <label for="count">Shape Count:</label>
+        <label for="count">Shape Count</label>
         <input type="number" id="count" value="50" min="1" max="200">
     </div>
-
     <div class="control-group">
-        <label for="edges">Max Edges:</label>
+        <label for="edges">Max Edges</label>
         <input type="number" id="edges" value="15" min="3" max="50">
     </div>
-
-    <button id="generateBtn" class="btn">Generate Shapes</button>
-    <button id="showJsonBtn" class="btn secondary">Show JSON Data</button>
+    <button id="generateBtn" class="btn-primary">Generate Shapes</button>
+    <button id="showJsonBtn" class="btn-secondary">Show JSON Data</button>
 </div>
 
 <div id="canvas-container">
@@ -228,19 +133,169 @@
     </div>
 </div>
 
-<!-- JSON 모달 -->
+<!-- JSON Modal -->
 <div id="jsonModal">
     <div class="modal-content">
         <div class="modal-header">
             <h3>Raw JSON Data</h3>
-            <button class="close-btn" onclick="closeJsonModal()">×</button>
+            <button class="close-btn" id="closeJsonBtn">×</button>
         </div>
-        <div class="modal-body">
-            <pre id="jsonData"></pre>
-        </div>
+        <pre id="jsonData"></pre>
     </div>
 </div>
 
-<script src="script.js"></script>
-</body>
-</html>
+<script>
+    class ShapeVisualizer {
+      constructor() {
+        this.canvas = document.getElementById('shapeCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.jsonDataElement = document.getElementById('jsonData');
+        this.statsElement = document.getElementById('stats');
+        this.currentShapes = null;
+        this.currentResponseData = null;
+
+        document.getElementById('generateBtn').addEventListener('click', () => this.generateShapes());
+        document.getElementById('showJsonBtn').addEventListener('click', () => this.toggleJsonModal(true));
+        document.getElementById('closeJsonBtn').addEventListener('click', () => this.toggleJsonModal(false));
+        window.addEventListener('resize', () => this.updateCanvasSize());
+
+        this.updateCanvasSize();
+      }
+
+      updateCanvasSize() {
+        const width = Math.max(800, window.innerWidth - 100);
+        const height = Math.max(500, window.innerHeight - 400);
+        this.canvas.width = width;
+        this.canvas.height = height;
+        this.canvas.style.width = width + 'px';
+        this.canvas.style.height = height + 'px';
+        if (this.currentShapes) this.drawShapes(this.currentShapes);
+      }
+
+      async generateShapes() {
+        const radius = document.getElementById('radius').value;
+        const count = document.getElementById('count').value;
+        const edges = document.getElementById('edges').value;
+        const params = new URLSearchParams({
+          Action: 'ShapesOverlaps',
+          Width: this.canvas.width,
+          Height: this.canvas.height,
+          RadiusMax: radius,
+          HowMany: count,
+          MaxEdges: edges
+        });
+
+        this.ctx.fillStyle = '#f0f0f0';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = '#666';
+        this.ctx.font = '20px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('생성 중...', this.canvas.width / 2, this.canvas.height / 2);
+
+        try {
+          const response = await fetch(`/api?${params.toString()}`);
+          const data = await response.json();
+          if (data.RES.STATUS === 200) {
+            this.currentShapes = data.RES.RESULT;
+            this.currentResponseData = data;
+            this.drawShapes(this.currentShapes);
+            this.updateStats(this.currentShapes);
+            this.jsonDataElement.textContent = JSON.stringify(data, null, 2);
+          } else {
+            this.showError('오류: ' + data.RES.STATUS_MSG);
+          }
+        } catch (err) {
+          console.error(err);
+          this.showError('서버 통신 오류');
+        }
+      }
+
+      drawShapes(shapesData) {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = '#fff';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        const shapes = shapesData.shapes;
+        for (const shape of shapes) this.drawShape(shape);
+        this.drawStatistics(shapesData);
+      }
+
+      drawShape(shape) {
+        this.ctx.strokeStyle = '#2c3e50';
+        this.ctx.fillStyle = shape.color;
+        this.ctx.lineWidth = 2;
+        if (shape.type === 'circle') this.drawCircle(shape);
+        else this.drawPolygon(shape);
+        this.ctx.fillStyle = '#000';
+        this.ctx.font = '10px Arial';
+        this.ctx.textAlign = 'center';
+        const text = shape.id.split('_').pop();
+        this.ctx.fillText(text, shape.center.x, shape.center.y);
+      }
+
+      drawCircle(circle) {
+        this.ctx.beginPath();
+        this.ctx.arc(circle.center.x, circle.center.y, circle.radius, 0, 2 * Math.PI);
+        this.ctx.fill();
+        this.ctx.stroke();
+      }
+
+      drawPolygon(polygon) {
+        const vertices = polygon.vertices;
+        if (vertices.length < 3) return;
+        this.ctx.beginPath();
+        this.ctx.moveTo(vertices[0].x, vertices[0].y);
+        for (let v of vertices) this.ctx.lineTo(v.x, v.y);
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.stroke();
+      }
+
+      drawStatistics(shapesData) {
+        const { overlapGroups } = shapesData;
+        if (overlapGroups.length) {
+          this.ctx.font = '12px Arial';
+          this.ctx.textAlign = 'left';
+          let y = 20;
+          overlapGroups.forEach((group, idx) => {
+            this.ctx.fillStyle = group.color;
+            this.ctx.fillRect(10, y - 10, 15, 15);
+            this.ctx.fillStyle = '#000';
+            this.ctx.fillText(`Group ${idx + 1}: ${group.size} shapes`, 30, y);
+            y += 20;
+          });
+        }
+      }
+
+      updateStats(shapesData) {
+        const { shapes, totalCount, overlapGroups } = shapesData;
+        const typeCount = { circle: 0, regularPolygon: 0, irregularPolygon: 0 };
+        shapes.forEach(s => typeCount[s.type]++);
+        const overlapping = new Set();
+        overlapGroups.forEach(g => g.shapeIds.forEach(id => overlapping.add(id)));
+        this.statsElement.innerHTML = `
+          <div class="stat-item"><strong>Total Shapes:</strong> ${totalCount}</div>
+          <div class="stat-item"><strong>Circles:</strong> ${typeCount.circle} (${(typeCount.circle/totalCount*100).toFixed(1)}%)</div>
+          <div class="stat-item"><strong>Regular Polygons:</strong> ${typeCount.regularPolygon} (${(typeCount.regularPolygon/totalCount*100).toFixed(1)}%)</div>
+          <div class="stat-item"><strong>Irregular Polygons:</strong> ${typeCount.irregularPolygon} (${(typeCount.irregularPolygon/totalCount*100).toFixed(1)}%)</div>
+          <div class="stat-item"><strong>Overlap Groups:</strong> ${overlapGroups.length}</div>
+          <div class="stat-item"><strong>Overlapping Shapes:</strong> ${overlapping.size}</div>
+        `;
+      }
+
+      showError(msg) {
+        this.ctx.fillStyle = '#fff';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = '#e74c3c';
+        this.ctx.font = '20px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(msg, this.canvas.width / 2, this.canvas.height / 2);
+      }
+
+      toggleJsonModal(show) {
+        if (show && !this.currentResponseData) return alert('먼저 도형을 생성해주세요.');
+        document.getElementById('jsonModal').style.display = show ? 'block' : 'none';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => new ShapeVisualizer());
+</script>
