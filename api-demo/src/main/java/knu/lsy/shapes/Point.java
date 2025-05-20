@@ -3,8 +3,8 @@ package knu.lsy.shapes;
 import org.json.JSONObject;
 
 public class Point {
-    private double x;
-    private double y;
+    private final double x;
+    private final double y;
 
     public Point(double x, double y) {
         this.x = x;
@@ -19,10 +19,11 @@ public class Point {
         return y;
     }
 
-    public double distanceTo(Point other) {
+    // 거리 제곱 계산 (sqrt 없이 빠르게 비교할 때 사용)
+    public double distanceSquared(Point other) {
         double dx = this.x - other.x;
         double dy = this.y - other.y;
-        return Math.sqrt(dx * dx + dy * dy);
+        return dx * dx + dy * dy;
     }
 
     public JSONObject toJSON() {
@@ -30,10 +31,5 @@ public class Point {
         json.put("x", x);
         json.put("y", y);
         return json;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("(%.2f, %.2f)", x, y);
     }
 }

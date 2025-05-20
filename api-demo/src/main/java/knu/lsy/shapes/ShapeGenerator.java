@@ -4,11 +4,28 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import java.util.*;
 
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Random;
+
 public class ShapeGenerator {
     private Random random;
 
     public ShapeGenerator() {
         this.random = new Random();
+    }
+
+    private static List<Point> generateIrregularVertices(Point center, double radius, int numVertices) {
+        List<Point> verts = new ArrayList<>();
+        Random rand = new Random();
+        for (int i = 0; i < numVertices; i++) {
+            double angle = 2 * Math.PI * i / numVertices;
+            double r = radius * (0.5 + rand.nextDouble() * 0.5);
+            double x = center.getX() + r * Math.cos(angle);
+            double y = center.getY() + r * Math.sin(angle);
+            verts.add(new Point(x, y));
+        }
+        return verts;
     }
 
     public JSONObject generateShapes(int width, int height, int radiusMax, int howMany, int maxEdges) {
@@ -35,7 +52,7 @@ public class ShapeGenerator {
                 shape = new RegularPolygon(center, radius, sides, rotation);
             } else {
                 int vertices = 3 + random.nextInt(maxEdges - 2);
-                shape = new IrregularPolygon(center, radius, vertices);
+                shape = new IrregularPolygon(center, radius, generateIrregularVertices(center, radius, vertices));
             }
 
             shapes.add(shape);
